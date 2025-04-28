@@ -54,9 +54,18 @@ async function initDatabase() {
     await sequelize.authenticate();
     console.log('Veritabanı bağlantısı başarılı.');
     
-    // Migration'ları çalıştır
-    const { runMigrations } = require('./app/config/migrate');
-    await runMigrations();
+    // SariciOdemes tablosunu manuel oluştur
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS "SariciOdemes" (
+        "id" SERIAL PRIMARY KEY,
+        "sariciId" INTEGER NOT NULL REFERENCES "Sarici"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "odenenTutar" DECIMAL(10,2) NOT NULL,
+        "aciklama" VARCHAR(255),
+        "kalanBorc" DECIMAL(10,2) NOT NULL,
+        "createdAt" TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP NOT NULL
+      );
+    `);
     
     console.log('Veritabanı başlatma tamamlandı.');
   } catch (err) {
