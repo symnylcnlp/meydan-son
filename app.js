@@ -54,18 +54,31 @@ async function initDatabase() {
     await sequelize.authenticate();
     console.log('Veritabanı bağlantısı başarılı.');
     
-    // SariciOdemes tablosunu manuel oluştur
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "SariciOdemes" (
-        "id" SERIAL PRIMARY KEY,
-        "sariciId" INTEGER NOT NULL REFERENCES "Sarici"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "odenenTutar" DECIMAL(10,2) NOT NULL,
-        "aciklama" VARCHAR(255),
-        "kalanBorc" DECIMAL(10,2) NOT NULL,
-        "createdAt" TIMESTAMP NOT NULL,
-        "updatedAt" TIMESTAMP NOT NULL
-      );
+    // Mevcut tabloları kontrol et
+    const [tables] = await sequelize.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
     `);
+    
+    console.log('Mevcut tablolar:', tables.map(t => t.table_name));
+    
+    // SariciOdemes tablosu yoksa oluştur
+    if (!tables.some(t => t.table_name === 'SariciOdemes')) {
+      console.log('SariciOdemes tablosu oluşturuluyor...');
+      await sequelize.query(`
+        CREATE TABLE "SariciOdemes" (
+          "id" SERIAL PRIMARY KEY,
+          "sariciId" INTEGER NOT NULL REFERENCES "Sarici"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+          "odenenTutar" DECIMAL(10,2) NOT NULL,
+          "aciklama" VARCHAR(255),
+          "kalanBorc" DECIMAL(10,2) NOT NULL,
+          "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('SariciOdemes tablosu oluşturuldu.');
+    }
     
     console.log('Veritabanı başlatma tamamlandı.');
   } catch (err) {
