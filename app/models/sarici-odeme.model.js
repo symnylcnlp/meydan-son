@@ -1,40 +1,40 @@
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-module.exports = (sequelize, DataTypes) => {
-  class SariciOdeme extends Model {
-    static associate(models) {
-      SariciOdeme.belongsTo(models.Sarici, {
-        foreignKey: 'sariciId',
-        as: 'sarici'
-      });
-    }
+class SariciOdeme extends Model {
+  static associate(models) {
+    SariciOdeme.belongsTo(models.Sarici, {
+      foreignKey: 'sariciId',
+      as: 'sarici'
+    });
   }
+}
 
-  SariciOdeme.init({
-    sariciId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Sarici',
-        key: 'id'
-      }
-    },
-    odenenTutar: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
-    },
-    aciklama: {
-      type: DataTypes.STRING
-    },
-    kalanBorc: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+SariciOdeme.init({
+  sariciId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Sarici',
+      key: 'id'
     }
-  }, {
-    sequelize,
-    modelName: 'SariciOdeme',
-    tableName: 'SariciOdemes'
-  });
+  },
+  odenenTutar: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  aciklama: {
+    type: DataTypes.STRING
+  },
+  kalanBorc: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  }
+}, {
+  sequelize,
+  modelName: 'SariciOdeme',
+  tableName: 'SariciOdemes',
+  timestamps: true
+});
 
-  return SariciOdeme;
-}; 
+module.exports = SariciOdeme; 

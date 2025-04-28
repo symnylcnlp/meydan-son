@@ -1,6 +1,7 @@
 const Sarici = require('../models/sarici.model');
 const MalzemeGecmisi = require('../models/malzeme-gecmisi.model');
 const SariciOdeme = require('../models/sarici-odeme.model');
+const sequelize = require('../config/database');
 
 const TUTUN_PER_SIGARA_KOLI = 1.2; // Her koli sigara için 1.2 koli tütün
 const MAKARON_PER_SIGARA_KOLI = 1; // Her koli sigara için 1 koli makaron
@@ -415,17 +416,18 @@ const sariciController = {
         return res.status(404).json({ message: 'Sarıcı bulunamadı' });
       }
 
+      // Toplam borç hesaplama (sarım borcu + hazır koli borcu)
+      const sarimBorcu = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+      const toplamBorc = yuvarla(sarimBorcu + (sarici.hazirKoliBorcu || 0));
+      const kalanBorc = yuvarla(toplamBorc - (sarici.odenenBorc || 0));
+
       // Ödeme kaydı oluştur
       const odeme = await SariciOdeme.create({
         sariciId: sarici.id,
         odenenTutar: sarici.odenenBorc || 0,
-        kalanBorc: yuvarla((sarici.gelenSigara * sarici.sarimUcreti) + (sarici.hazirKoliBorcu || 0) - (sarici.odenenBorc || 0)),
+        kalanBorc: kalanBorc,
         aciklama: 'Ödeme kaydı'
       });
-
-      // Toplam borç hesaplama (sarım borcu + hazır koli borcu)
-      const sarimBorcu = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
-      const toplamBorc = yuvarla(sarimBorcu + (sarici.hazirKoliBorcu || 0));
 
       res.json({
         sariciAdi: sarici.sariciAdi,
@@ -433,7 +435,7 @@ const sariciController = {
         sarimBorcu: sarimBorcu,
         hazirKoliBorcu: yuvarla(sarici.hazirKoliBorcu || 0),
         toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
-        kalanBorc: yuvarla(toplamBorc - (sarici.odenenBorc || 0)),
+        kalanBorc: kalanBorc,
         odemeler: [{
           odenenTutar: odeme.odenenTutar,
           kalanBorc: odeme.kalanBorc,
@@ -443,6 +445,7 @@ const sariciController = {
         }]
       });
     } catch (error) {
+      console.error('Ödeme geçmişi hatası:', error);
       res.status(500).json({ message: error.message });
     }
   }
