@@ -415,9 +415,12 @@ const sariciController = {
         return res.status(404).json({ message: 'Sarıcı bulunamadı' });
       }
 
-      const odemeler = await SariciOdeme.findAll({
-        where: { sariciId: sarici.id },
-        order: [['createdAt', 'DESC']]
+      // Ödeme kaydı oluştur
+      const odeme = await SariciOdeme.create({
+        sariciId: sarici.id,
+        odenenTutar: sarici.odenenBorc || 0,
+        kalanBorc: yuvarla((sarici.gelenSigara * sarici.sarimUcreti) + (sarici.hazirKoliBorcu || 0) - (sarici.odenenBorc || 0)),
+        aciklama: 'Ödeme kaydı'
       });
 
       // Toplam borç hesaplama (sarım borcu + hazır koli borcu)
@@ -431,13 +434,13 @@ const sariciController = {
         hazirKoliBorcu: yuvarla(sarici.hazirKoliBorcu || 0),
         toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
         kalanBorc: yuvarla(toplamBorc - (sarici.odenenBorc || 0)),
-        odemeler: odemeler.map(odeme => ({
+        odemeler: [{
           odenenTutar: odeme.odenenTutar,
           kalanBorc: odeme.kalanBorc,
           odemeYuzdesi: yuvarla((odeme.odenenTutar / (odeme.kalanBorc + odeme.odenenTutar)) * 100),
           aciklama: odeme.aciklama,
           tarih: odeme.createdAt
-        }))
+        }]
       });
     } catch (error) {
       res.status(500).json({ message: error.message });
