@@ -55,8 +55,8 @@ async function initDatabase() {
     console.log('Veritabanı bağlantısı başarılı.');
     
     // Tüm modelleri senkronize et
-    await sequelize.sync({ alter: true });
-    console.log('Tüm tablolar senkronize edildi.');
+    await sequelize.sync({ force: true }); // force: true ile tüm tabloları yeniden oluştur
+    console.log('Tüm tablolar yeniden oluşturuldu.');
     
     // Mevcut tabloları kontrol et
     const [tables] = await sequelize.query(`
@@ -65,7 +65,7 @@ async function initDatabase() {
       WHERE table_schema = 'public'
     `);
     
-    console.log('Mevcut tablolar:', tables.map(t => t.table_name));
+    console.log('Oluşturulan tablolar:', tables.map(t => t.table_name));
     
     console.log('Veritabanı başlatma tamamlandı.');
   } catch (err) {
