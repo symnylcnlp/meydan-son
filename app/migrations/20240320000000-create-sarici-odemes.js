@@ -2,18 +2,18 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('PaketciOdemes', {
+    await queryInterface.createTable('SariciOdemes', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      paketciId: {
+      sariciId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Paketci',
+          model: 'Sarici',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -42,6 +42,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('PaketciOdemes');
+    await queryInterface.dropTable('SariciOdemes');
   }
 }; 
