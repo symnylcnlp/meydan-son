@@ -57,9 +57,15 @@ async function runMigrations() {
     console.log('Migrations completed successfully');
   } catch (error) {
     console.error('Migration error:', error);
-  } finally {
-    await sequelize.close();
+    throw error;
   }
 }
 
-runMigrations(); 
+// Eğer bu dosya doğrudan çalıştırılıyorsa
+if (require.main === module) {
+  runMigrations()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
+
+module.exports = { runMigrations }; 

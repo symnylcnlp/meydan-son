@@ -54,9 +54,11 @@ async function initDatabase() {
     await sequelize.authenticate();
     console.log('Veritabanı bağlantısı başarılı.');
     
-    // Tabloları senkronize et
-    await sequelize.sync({ force: true });
-    console.log('Tablolar senkronize edildi.');
+    // Migration'ları çalıştır
+    const { runMigrations } = require('./app/config/migrate');
+    await runMigrations();
+    
+    console.log('Veritabanı başlatma tamamlandı.');
   } catch (err) {
     console.error('Veritabanı başlatma hatası:', err);
   }
