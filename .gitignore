@@ -59,7 +59,6 @@ typings/
 
 # next.js build output
 .next
-
 # Environment
 .env.local
 .env.*.local
@@ -73,3 +72,4 @@ typings/
 # OS
 .DS_Store
 Thumbs.db
+

@@ -310,12 +310,14 @@ const sariciController = {
         return res.status(400).json({ message: 'Geçerli bir ödeme tutarı giriniz' });
       }
 
-      const guncelBorc = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+      // Toplam borç hesaplama (sarım borcu + hazır koli borcu)
+      const sarimBorcu = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+      const toplamBorc = yuvarla(sarimBorcu + (sarici.hazirKoliBorcu || 0));
       
-      if (odenenTutar > guncelBorc) {
+      if (odenenTutar > toplamBorc) {
         return res.status(400).json({ 
           message: 'Ödeme tutarı toplam borçtan fazla olamaz',
-          guncelBorc: guncelBorc,
+          toplamBorc: toplamBorc,
           odenenTutar
         });
       }
@@ -328,7 +330,7 @@ const sariciController = {
         odenenBorc: yuvarla((sarici.odenenBorc || 0) + odenenTutar)
       });
 
-      const kalanBorc = yuvarla(guncelBorc - odenenTutar);
+      const kalanBorc = yuvarla(toplamBorc - odenenTutar);
 
       res.json({
         sariciAdi: sarici.sariciAdi,
@@ -336,8 +338,8 @@ const sariciController = {
         odenenKoli: odenenKoli,
         kalanBorc: kalanBorc,
         toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
-        gelenSigara: sarici.gelenSigara, // Gelen sigara sayısı değişmedi
-        odemeYuzdesi: yuvarla((odenenTutar / guncelBorc) * 100) // Ödeme yüzdesi
+        gelenSigara: sarici.gelenSigara,
+        odemeYuzdesi: yuvarla((odenenTutar / toplamBorc) * 100)
       });
     } catch (error) {
       res.status(400).json({ message: error.message });
@@ -418,15 +420,19 @@ const sariciController = {
         order: [['createdAt', 'DESC']]
       });
 
-      const guncelBorc = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+      // Toplam borç hesaplama (sarım borcu + hazır koli borcu)
+      const sarimBorcu = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+      const toplamBorc = yuvarla(sarimBorcu + (sarici.hazirKoliBorcu || 0));
 
       res.json({
         sariciAdi: sarici.sariciAdi,
-        guncelBorc: guncelBorc,
+        toplamBorc: toplamBorc,
+        sarimBorcu: sarimBorcu,
+        hazirKoliBorcu: yuvarla(sarici.hazirKoliBorcu || 0),
         toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
+        kalanBorc: yuvarla(toplamBorc - (sarici.odenenBorc || 0)),
         odemeler: odemeler.map(odeme => ({
           odenenTutar: odeme.odenenTutar,
-          odenenKoli: yuvarla(odeme.odenenTutar / sarici.sarimUcreti),
           kalanBorc: odeme.kalanBorc,
           odemeYuzdesi: yuvarla((odeme.odenenTutar / (odeme.kalanBorc + odeme.odenenTutar)) * 100),
           aciklama: odeme.aciklama,
