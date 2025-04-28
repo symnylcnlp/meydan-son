@@ -48,13 +48,6 @@ app.use('/api/siparisler', siparisRoutes);
 app.use('/api/odeme-takvimi', odemeTakvimiRoutes);
 
 // Veritabanı bağlantısı ve şema güncellemesi
-sequelize.sync({ force: true }).then(() => {
-  console.log('Veritabanı şeması güncellendi');
-}).catch((error) => {
-  console.error('Veritabanı şeması güncellenirken hata:', error);
-});
-
-// Veritabanı bağlantısı
 async function initDatabase() {
   try {
     // Sequelize bağlantısı
@@ -62,7 +55,7 @@ async function initDatabase() {
     console.log('Veritabanı bağlantısı başarılı.');
     
     // Tabloları senkronize et
-    await sequelize.sync();
+    await sequelize.sync({ force: true });
     console.log('Tablolar senkronize edildi.');
   } catch (err) {
     console.error('Veritabanı başlatma hatası:', err);
