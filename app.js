@@ -48,7 +48,7 @@ app.use('/api/siparisler', siparisRoutes);
 app.use('/api/odeme-takvimi', odemeTakvimiRoutes);
 
 // Veritabanı bağlantısı ve şema güncellemesi
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ force: true }).then(() => {
   console.log('Veritabanı şeması güncellendi');
 }).catch((error) => {
   console.error('Veritabanı şeması güncellenirken hata:', error);
