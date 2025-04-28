@@ -1,5 +1,6 @@
 const { Paketci, PaketciStok } = require('../models/paketci.model');
 const PaketciMalzeme = require('../models/paketci-malzeme.model');
+const PaketciOdeme = require('../models/paketci-odeme.model');
 const SigaraTuru = require('../models/sigara-turu.model');
 const { Op } = require('sequelize');
 
@@ -214,7 +215,7 @@ exports.hesaplaBorc = async (req, res) => {
 exports.borcOde = async (req, res) => {
   try {
     const { id } = req.params;
-    const { odenenTutar } = req.body;
+    const { odenenTutar, aciklama } = req.body;
 
     const paketci = await Paketci.findByPk(id);
     if (!paketci) {
@@ -234,14 +235,57 @@ exports.borcOde = async (req, res) => {
     const odenenKoli = odenenTutar / paketci.paketlemeUcreti;
     const kalanBorc = toplamBorc - odenenTutar;
 
+    // Ödeme kaydı oluştur
+    await PaketciOdeme.create({
+      paketciId: paketci.id,
+      odenenTutar: odenenTutar,
+      aciklama: aciklama || 'Borç ödemesi',
+      kalanBorc: kalanBorc
+    });
+
     res.json({
       paketciAdi: paketci.paketciAdi,
       odenenTutar,
       odenenKoli,
-      kalanBorc
+      kalanBorc,
+      odemeYuzdesi: (odenenTutar / toplamBorc) * 100
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+// Ödeme geçmişi
+exports.odemeGecmisi = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const paketci = await Paketci.findByPk(id);
+    if (!paketci) {
+      return res.status(404).json({ message: 'Paketçi bulunamadı' });
+    }
+
+    const toplamBorc = parseFloat(paketci.alinanPaket) * parseFloat(paketci.paketlemeUcreti);
+
+    const odemeler = await PaketciOdeme.findAll({
+      where: { paketciId: paketci.id },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      paketciAdi: paketci.paketciAdi,
+      guncelBorc: toplamBorc,
+      toplamOdenenBorc: odemeler.reduce((acc, odeme) => acc + parseFloat(odeme.odenenTutar), 0),
+      odemeler: odemeler.map(odeme => ({
+        odenenTutar: odeme.odenenTutar,
+        odenenKoli: odeme.odenenTutar / paketci.paketlemeUcreti,
+        kalanBorc: odeme.kalanBorc,
+        odemeYuzdesi: (odeme.odenenTutar / (odeme.kalanBorc + odeme.odenenTutar)) * 100,
+        aciklama: odeme.aciklama,
+        tarih: odeme.createdAt
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 

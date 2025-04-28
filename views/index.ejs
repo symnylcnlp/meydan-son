@@ -109,6 +109,25 @@
           </div>
 
           <div class="endpoint">
+            <h3><span class="method get">GET</span>/api/saricilar/:id</h3>
+            <p>ID'ye göre sarıcı getirir.</p>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "id": 1,
+  "sariciAdi": "Pablo",
+  "sarimUcreti": 1000,
+  "hazirKoliUcreti": 11500,
+  "gidenTutun": 2.4,
+  "gidenMakaron": 2,
+  "gelenSigara": 1,
+  "kalanTutun": 1.2,
+  "kalanMakaron": 1
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
             <h3><span class="method post">POST</span>/api/saricilar</h3>
             <p>Yeni sarıcı ekler.</p>
             <div class="code-title">İstek Gövdesi:</div>
@@ -129,6 +148,42 @@
   "gelenSigara": 0,
   "kalanTutun": 0,
   "kalanMakaron": 0
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method put">PUT</span>/api/saricilar/:id</h3>
+            <p>Sarıcı bilgilerini günceller.</p>
+            <div class="code-title">İstek Gövdesi:</div>
+            <pre class="bg-light p-3 mt-2"><code>{
+  "sariciAdi": "string",     // Sarıcının adı
+  "sarimUcreti": number,     // Koli başına sarım ücreti (TL)
+  "hazirKoliUcreti": number  // Hazır koli ücreti (TL)
+}</code></pre>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "id": 1,
+  "sariciAdi": "Pablo",
+  "sarimUcreti": 1000,
+  "hazirKoliUcreti": 11500,
+  "gidenTutun": 2.4,
+  "gidenMakaron": 2,
+  "gelenSigara": 1,
+  "kalanTutun": 1.2,
+  "kalanMakaron": 1
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method delete">DELETE</span>/api/saricilar/:id</h3>
+            <p>Sarıcıyı siler.</p>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "message": "Sarıcı silindi"
 }</code></pre>
             </div>
           </div>
@@ -189,26 +244,8 @@
           </div>
 
           <div class="endpoint">
-            <h3><span class="method post">POST</span>/api/saricilar/:id/borc-ode</h3>
-            <p>Sarıcının borcunu öder.</p>
-            <div class="code-title">İstek Gövdesi:</div>
-            <pre class="bg-light p-3 mt-2"><code>{
-  "odenenTutar": number  // Ödenecek tutar (TL)
-}</code></pre>
-            <div class="response-example">
-              <div class="code-title">Örnek Yanıt:</div>
-              <pre><code>{
-  "sariciAdi": "Pablo",
-  "odenenTutar": 1000,
-  "odenenKoli": 1,
-  "kalanBorc": 0
-}</code></pre>
-            </div>
-          </div>
-
-          <div class="endpoint">
             <h3><span class="method get">GET</span>/api/saricilar/:id/hesapla-borc</h3>
-            <p>Sarıcının güncel borç durumunu hesaplar.</p>
+            <p>Sarıcının sarım borcunu hesaplar.</p>
             <div class="response-example">
               <div class="code-title">Örnek Yanıt:</div>
               <pre><code>{
@@ -227,8 +264,77 @@
           </div>
 
           <div class="endpoint">
+            <h3><span class="method post">POST</span>/api/saricilar/:id/hazir-koli-al</h3>
+            <p>Hazır koli alır.</p>
+            <div class="code-title">İstek Gövdesi:</div>
+            <pre class="bg-light p-3 mt-2"><code>{
+  "miktar": number  // Alınacak hazır koli sayısı
+}</code></pre>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "sariciAdi": "Pablo",
+  "alinanHazirKoli": 1,
+  "birimHazirKoliUcreti": 11500,
+  "hazirKoliBorcu": 11500,
+  "toplamHazirKoliBorcu": 11500
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method post">POST</span>/api/saricilar/:id/borc-ode</h3>
+            <p>Sarıcının borcunu öder.</p>
+            <div class="code-title">İstek Gövdesi:</div>
+            <pre class="bg-light p-3 mt-2"><code>{
+  "odenenTutar": number  // Ödenecek tutar (TL)
+}</code></pre>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "sariciAdi": "Pablo",
+  "odenenTutar": 1000,
+  "odenenKoli": 1,
+  "kalanBorc": 0,
+  "kalanSigara": 0
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
+            <h3><span class="method get">GET</span>/api/saricilar/:id/odeme-gecmisi</h3>
+            <p>Sarıcının ödeme geçmişini getirir.</p>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "sariciAdi": "Pablo",
+  "guncelBorc": 1000,
+  "toplamOdenenBorc": 500,
+  "odemeler": [
+    {
+      "odenenTutar": 300,
+      "odenenKoli": 0.3,
+      "kalanBorc": 700,
+      "odemeYuzdesi": 30,
+      "aciklama": "Borç ödemesi",
+      "tarih": "2024-03-20T10:00:00.000Z"
+    },
+    {
+      "odenenTutar": 200,
+      "odenenKoli": 0.2,
+      "kalanBorc": 900,
+      "odemeYuzdesi": 20,
+      "aciklama": "Ara ödeme",
+      "tarih": "2024-03-19T10:00:00.000Z"
+    }
+  ]
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
             <h3><span class="method get">GET</span>/api/saricilar/:id/malzeme-gecmisi</h3>
-            <p>Sarıcının malzeme geçmişini gösterir.</p>
+            <p>Sarıcının malzeme geçmişini getirir.</p>
             <div class="response-example">
               <div class="code-title">Örnek Yanıt:</div>
               <pre><code>{
@@ -238,7 +344,13 @@
       "malzemeTipi": "TUTUN",
       "miktar": 1.2,
       "aciklama": "1.2 koli tütün verildi",
-      "tarih": "2025-04-26T10:44:09.000Z"
+      "tarih": "2024-03-20T10:00:00.000Z"
+    },
+    {
+      "malzemeTipi": "MAKARON",
+      "miktar": 1,
+      "aciklama": "1 koli makaron verildi",
+      "tarih": "2024-03-20T10:00:00.000Z"
     }
   ]
 }</code></pre>
@@ -307,18 +419,46 @@
           </div>
 
           <div class="endpoint">
+            <h3><span class="method get">GET</span>/api/toptancilar/:id/odeme-gecmisi</h3>
+            <p>Toptancının ödeme geçmişini getirir.</p>
+            <div class="response-example">
+              <div class="code-title">Örnek Yanıt:</div>
+              <pre><code>{
+  "toptanciAdi": "Fırat Karaköse",
+  "toplamBorc": 500000,
+  "odemeler": [
+    {
+      "odenenTutar": 100000,
+      "kalanBorc": 400000,
+      "aciklama": "Borç ödemesi",
+      "tarih": "2024-03-20T10:00:00.000Z"
+    },
+    {
+      "odenenTutar": 200000,
+      "kalanBorc": 200000,
+      "aciklama": "Ara ödeme",
+      "tarih": "2024-03-19T10:00:00.000Z"
+    }
+  ]
+}</code></pre>
+            </div>
+          </div>
+
+          <div class="endpoint">
             <h3><span class="method post">POST</span>/api/toptancilar/:id/borc-ode</h3>
             <p>Toptancının borcunu öder.</p>
             <div class="code-title">İstek Gövdesi:</div>
             <pre class="bg-light p-3 mt-2"><code>{
-  "odenenTutar": number  // Ödenecek tutar (TL)
+  "odenenTutar": number,  // Ödenecek tutar (TL)
+  "aciklama": string     // Ödeme açıklaması (opsiyonel)
 }</code></pre>
             <div class="response-example">
               <div class="code-title">Örnek Yanıt:</div>
               <pre><code>{
   "toptanciAdi": "Fırat Karaköse",
-  "odenenTutar": 1000000,
-  "kalanBorc": 500000
+  "odenenTutar": 100000,
+  "kalanBorc": 400000,
+  "odemeYuzdesi": 20
 }</code></pre>
             </div>
           </div>
@@ -426,11 +566,52 @@
               </div>
 
               <div class="endpoint">
+                <span class="method get">GET</span>
+                <code>/api/paketciler/:id/odeme-gecmisi</code>
+                <p>Paketçinin ödeme geçmişini getirir.</p>
+                <div class="response-example">
+                  <div class="code-title">Örnek Yanıt:</div>
+                  <pre><code>{
+  "paketciAdi": "Ahmet",
+  "guncelBorc": 5000,
+  "toplamOdenenBorc": 2000,
+  "odemeler": [
+    {
+      "odenenTutar": 1500,
+      "odenenKoli": 15,
+      "kalanBorc": 3500,
+      "odemeYuzdesi": 30,
+      "aciklama": "Borç ödemesi",
+      "tarih": "2024-03-20T10:00:00.000Z"
+    },
+    {
+      "odenenTutar": 500,
+      "odenenKoli": 5,
+      "kalanBorc": 4500,
+      "odemeYuzdesi": 10,
+      "aciklama": "Ara ödeme",
+      "tarih": "2024-03-19T10:00:00.000Z"
+    }
+  ]
+}</code></pre>
+                </div>
+              </div>
+
+              <div class="endpoint">
                 <span class="method post">POST</span>
                 <code>/api/paketciler/:id/borc-ode</code>
                 <p>Paketçinin borcunu öder.</p>
                 <pre><code>{
-  "odenenTutar": number
+  "odenenTutar": number,  // Ödenecek tutar (TL)
+  "aciklama": string     // Ödeme açıklaması (opsiyonel)
+}</code></pre>
+                <p>Dönen veri:</p>
+                <pre><code>{
+  "paketciAdi": "string",
+  "odenenTutar": number,
+  "odenenKoli": number,
+  "kalanBorc": number,
+  "odemeYuzdesi": number
 }</code></pre>
               </div>
 

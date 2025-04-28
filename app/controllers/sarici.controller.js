@@ -1,5 +1,6 @@
 const Sarici = require('../models/sarici.model');
 const MalzemeGecmisi = require('../models/malzeme-gecmisi.model');
+const SariciOdeme = require('../models/sarici-odeme.model');
 
 const TUTUN_PER_SIGARA_KOLI = 1.2; // Her koli sigara için 1.2 koli tütün
 const MAKARON_PER_SIGARA_KOLI = 1; // Her koli sigara için 1 koli makaron
@@ -321,19 +322,22 @@ const sariciController = {
 
       // Ödenen tutara göre kaç koli sigaranın ödendiğini hesapla
       const odenenKoli = yuvarla(odenenTutar / sarici.sarimUcreti);
-      const yeniGelenSigara = yuvarla(sarici.gelenSigara - odenenKoli);
       
+      // Sadece borcu güncelle, gelen sigara sayısını değiştirme
       await sarici.update({
-        gelenSigara: yeniGelenSigara
+        odenenBorc: yuvarla((sarici.odenenBorc || 0) + odenenTutar)
       });
 
-      const kalanBorc = yuvarla(yeniGelenSigara * sarici.sarimUcreti);
+      const kalanBorc = yuvarla(guncelBorc - odenenTutar);
 
       res.json({
         sariciAdi: sarici.sariciAdi,
         odenenTutar: yuvarla(odenenTutar),
         odenenKoli: odenenKoli,
-        kalanBorc: kalanBorc
+        kalanBorc: kalanBorc,
+        toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
+        gelenSigara: sarici.gelenSigara, // Gelen sigara sayısı değişmedi
+        odemeYuzdesi: yuvarla((odenenTutar / guncelBorc) * 100) // Ödeme yüzdesi
       });
     } catch (error) {
       res.status(400).json({ message: error.message });
@@ -355,11 +359,17 @@ const sariciController = {
 
       const hazirKoliBorcu = yuvarla(sarici.hazirKoliUcreti * miktar);
 
+      // Hazır koli alındığında sadece borç ekle, malzemeleri değiştirme
+      await sarici.update({
+        hazirKoliBorcu: yuvarla(sarici.hazirKoliBorcu + hazirKoliBorcu)
+      });
+
       const hesaplama = {
         sariciAdi: sarici.sariciAdi,
         alinanHazirKoli: miktar,
         birimHazirKoliUcreti: sarici.hazirKoliUcreti,
-        hazirKoliBorcu: hazirKoliBorcu
+        hazirKoliBorcu: hazirKoliBorcu,
+        toplamHazirKoliBorcu: yuvarla(sarici.hazirKoliBorcu + hazirKoliBorcu)
       };
 
       res.json(hesaplama);
@@ -388,6 +398,39 @@ const sariciController = {
           miktar: kayit.miktar,
           aciklama: kayit.aciklama,
           tarih: kayit.createdAt
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Ödeme geçmişi
+  async odemeGecmisi(req, res) {
+    try {
+      const sarici = await Sarici.findByPk(req.params.id);
+      if (!sarici) {
+        return res.status(404).json({ message: 'Sarıcı bulunamadı' });
+      }
+
+      const odemeler = await SariciOdeme.findAll({
+        where: { sariciId: sarici.id },
+        order: [['createdAt', 'DESC']]
+      });
+
+      const guncelBorc = yuvarla(sarici.gelenSigara * sarici.sarimUcreti);
+
+      res.json({
+        sariciAdi: sarici.sariciAdi,
+        guncelBorc: guncelBorc,
+        toplamOdenenBorc: yuvarla(sarici.odenenBorc || 0),
+        odemeler: odemeler.map(odeme => ({
+          odenenTutar: odeme.odenenTutar,
+          odenenKoli: yuvarla(odeme.odenenTutar / sarici.sarimUcreti),
+          kalanBorc: odeme.kalanBorc,
+          odemeYuzdesi: yuvarla((odeme.odenenTutar / (odeme.kalanBorc + odeme.odenenTutar)) * 100),
+          aciklama: odeme.aciklama,
+          tarih: odeme.createdAt
         }))
       });
     } catch (error) {

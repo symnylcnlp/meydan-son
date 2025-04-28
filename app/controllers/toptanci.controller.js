@@ -1,5 +1,6 @@
 const Toptanci = require('../models/toptanci.model');
 const ToptanciAlisveris = require('../models/toptanci-alisveris.model');
+const ToptanciOdeme = require('../models/toptanci-odeme.model');
 
 // Yardımcı fonksiyonlar
 const yuvarla = (sayi) => Number(Number(sayi).toFixed(2));
@@ -149,7 +150,7 @@ const toptanciController = {
         return res.status(404).json({ message: 'Toptancı bulunamadı' });
       }
 
-      const { odenenTutar } = req.body;
+      const { odenenTutar, aciklama } = req.body;
       if (!odenenTutar || odenenTutar <= 0) {
         return res.status(400).json({ message: 'Geçerli bir ödeme tutarı giriniz' });
       }
@@ -164,6 +165,15 @@ const toptanciController = {
 
       const kalanBorc = yuvarla(Number(toptanci.toplamBorc) - Number(odenenTutar));
       
+      // Ödeme kaydı oluştur
+      await ToptanciOdeme.create({
+        toptanciId: toptanci.id,
+        odenenTutar: yuvarla(odenenTutar),
+        aciklama: aciklama || 'Borç ödemesi',
+        kalanBorc: kalanBorc
+      });
+
+      // Toplam borcu güncelle
       await toptanci.update({
         toplamBorc: kalanBorc
       });
@@ -171,10 +181,39 @@ const toptanciController = {
       res.json({
         toptanciAdi: toptanci.toptanciAdi,
         odenenTutar: yuvarla(odenenTutar),
-        kalanBorc: kalanBorc
+        kalanBorc: kalanBorc,
+        odemeYuzdesi: yuvarla((odenenTutar / toptanci.toplamBorc) * 100)
       });
     } catch (error) {
       res.status(400).json({ message: error.message });
+    }
+  },
+
+  // Ödeme geçmişi
+  async odemeGecmisi(req, res) {
+    try {
+      const toptanci = await Toptanci.findByPk(req.params.id);
+      if (!toptanci) {
+        return res.status(404).json({ message: 'Toptancı bulunamadı' });
+      }
+
+      const odemeler = await ToptanciOdeme.findAll({
+        where: { toptanciId: toptanci.id },
+        order: [['createdAt', 'DESC']]
+      });
+
+      res.json({
+        toptanciAdi: toptanci.toptanciAdi,
+        toplamBorc: toptanci.toplamBorc,
+        odemeler: odemeler.map(odeme => ({
+          odenenTutar: odeme.odenenTutar,
+          kalanBorc: odeme.kalanBorc,
+          aciklama: odeme.aciklama,
+          tarih: odeme.createdAt
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }
 };

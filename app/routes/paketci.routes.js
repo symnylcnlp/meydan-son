@@ -23,4 +23,7 @@ router.post('/:id/borc-ode', paketciController.borcOde);
 // Malzeme geçmişi
 router.get('/:id/malzeme-gecmisi', paketciController.malzemeGecmisi);
 
+// Ödeme geçmişi
+router.get('/:id/odeme-gecmisi', paketciController.odemeGecmisi);
+
 module.exports = router; 

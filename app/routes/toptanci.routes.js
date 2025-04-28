@@ -13,5 +13,6 @@ router.delete('/:id', toptanciController.delete);
 router.post('/:id/alisveris-ekle', toptanciController.alisverisEkle);
 router.get('/:id/alisveris-gecmisi', toptanciController.alisverisGecmisi);
 router.post('/:id/borc-ode', toptanciController.borcOde);
+router.get('/:id/odeme-gecmisi', toptanciController.odemeGecmisi);
 
 module.exports = router; 
